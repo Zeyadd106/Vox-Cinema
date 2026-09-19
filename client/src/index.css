@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vox: #e31837;
+  --color-vox-dark: #c41530;
+  --color-vox-light: #ff1f3d;
+  --color-vox-pink: #d40f7d;
+  --color-vox-pink-dark: #a80c63;
+  --color-vox-blue: #009ddb;
+  --color-vox-ink: #1a1a1a;
+  --color-vox-strip: #3e454b;
+  --color-vox-navy: #0a1c34;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+html, body {
+  background-color: #000;
+  color: #fff;
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
