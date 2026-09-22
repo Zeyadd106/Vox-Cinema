@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, apiError } from '../services/api';
 import { Booking } from '../types';
+import { useLang } from '../context/LangContext';
 
 function BookingRow({ b }: { b: Booking }) {
   return (
@@ -18,6 +19,7 @@ function BookingRow({ b }: { b: Booking }) {
 }
 
 export default function Dashboard() {
+  const { t } = useLang();
   const [upcoming, setUpcoming] = useState<Booking[]>([]);
   const [history, setHistory] = useState<Booking[]>([]);
   const [error, setError] = useState('');
@@ -30,16 +32,16 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-5xl px-[6%] py-12">
-      <h1 className="mb-8 text-3xl font-bold text-vox">My Dashboard</h1>
+      <h1 className="mb-8 text-3xl font-bold text-vox">{t.dash.title}</h1>
       {error && <p className="mb-4 text-red-400">{error}</p>}
-      <h2 className="mb-3 text-xl font-semibold">Upcoming Bookings</h2>
+      <h2 className="mb-3 text-xl font-semibold">{t.dash.upcoming}</h2>
       <div className="mb-10 space-y-3">
-        {upcoming.length === 0 && <p className="text-[#888]">No upcoming bookings.</p>}
+        {upcoming.length === 0 && <p className="text-[#888]">{t.dash.noUpcoming}</p>}
         {upcoming.map((b) => <BookingRow key={b.id} b={b} />)}
       </div>
-      <h2 className="mb-3 text-xl font-semibold">Booking History</h2>
+      <h2 className="mb-3 text-xl font-semibold">{t.dash.history}</h2>
       <div className="space-y-3">
-        {history.length === 0 && <p className="text-[#888]">No past bookings.</p>}
+        {history.length === 0 && <p className="text-[#888]">{t.dash.noHistory}</p>}
         {history.map((b) => <BookingRow key={b.id} b={b} />)}
       </div>
     </div>

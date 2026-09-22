@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../services/api';
+import { useLang } from '../../context/LangContext';
 
 export default function AdminSettings() {
+  const { t } = useLang();
   const [form, setForm] = useState({ site_name: '', contact_email: '', phone_number: '', address: '', booking_fee: '0', tax_rate: '5' });
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -26,19 +28,19 @@ export default function AdminSettings() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Settings</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.admin.settings}</h1>
       {msg && <p className="mb-4 rounded border border-[#444] bg-[#222] px-4 py-2 text-sm">{msg}</p>}
       {error && <p className="text-red-400">{error}</p>}
       <form onSubmit={submit} className="grid max-w-2xl gap-4 rounded-lg border border-[#333] bg-[#1a1a1a] p-8">
-        <div><label className="mb-1 block text-sm text-[#aaa]">Site Name</label><input value={form.site_name} onChange={set('site_name')} className={input} /></div>
-        <div><label className="mb-1 block text-sm text-[#aaa]">Contact Email</label><input value={form.contact_email} onChange={set('contact_email')} className={input} /></div>
-        <div><label className="mb-1 block text-sm text-[#aaa]">Phone</label><input value={form.phone_number} onChange={set('phone_number')} className={input} /></div>
-        <div><label className="mb-1 block text-sm text-[#aaa]">Address</label><input value={form.address} onChange={set('address')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.siteName}</label><input value={form.site_name} onChange={set('site_name')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.contactEmail}</label><input value={form.contact_email} onChange={set('contact_email')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.phoneF}</label><input value={form.phone_number} onChange={set('phone_number')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.address}</label><input value={form.address} onChange={set('address')} className={input} /></div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="mb-1 block text-sm text-[#aaa]">Booking Fee</label><input type="number" min={0} step="0.01" value={form.booking_fee} onChange={set('booking_fee')} className={input} /></div>
-          <div><label className="mb-1 block text-sm text-[#aaa]">Tax Rate (%)</label><input type="number" min={0} max={100} step="0.01" value={form.tax_rate} onChange={set('tax_rate')} className={input} /></div>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.bookingFee}</label><input type="number" min={0} step="0.01" value={form.booking_fee} onChange={set('booking_fee')} className={input} /></div>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.taxRate}</label><input type="number" min={0} max={100} step="0.01" value={form.tax_rate} onChange={set('tax_rate')} className={input} /></div>
         </div>
-        <button className="rounded-md bg-vox py-3 font-semibold hover:bg-vox-dark">Save Settings</button>
+        <button className="rounded-md bg-vox py-3 font-semibold hover:bg-vox-dark">{t.admin.saveSettings}</button>
       </form>
     </div>
   );

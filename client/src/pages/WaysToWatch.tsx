@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
+import { useLang } from '../context/LangContext';
 
-const FORMATS: Record<string, { name: string; tagline: string; body: string[]; color: string }> = {
+export const FORMATS: Record<string, { name: string; tagline: string; body: string[]; color: string }> = {
   imax: {
     name: 'IMAX',
     tagline: "The world's most immersive cinema experience",
@@ -58,25 +59,29 @@ const FORMATS: Record<string, { name: string; tagline: string; body: string[]; c
 };
 
 export default function WaysToWatch() {
+  const { t } = useLang();
   const { slug } = useParams();
   const keys = Object.keys(FORMATS);
+  const tr = (k: string) => t.ways.formats[k] ?? { tagline: FORMATS[k].tagline, body: FORMATS[k].body };
 
   if (!slug) {
     return (
+      <div className="bg-white text-slate-900">
       <div className="mx-auto max-w-6xl px-[6%] py-12">
-        <p className="text-center text-sm uppercase tracking-widest text-[#888]">Ways to Watch</p>
-        <h1 className="mb-2 text-center text-3xl font-bold uppercase tracking-widest text-vox">Try an Experience</h1>
-        <p className="mx-auto mb-10 max-w-2xl text-center text-[#aaa]">Standard is great — but these formats make it unforgettable. Pick your experience.</p>
+        <p className="text-center text-sm uppercase tracking-widest text-slate-400">{t.ways.kicker}</p>
+        <h1 className="mb-2 text-center text-3xl font-bold uppercase tracking-widest text-vox-blue">{t.ways.title}</h1>
+        <p className="mx-auto mb-10 max-w-2xl text-center text-slate-500">{t.ways.sub}</p>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {keys.map((k) => (
-            <Link key={k} to={`/ways-to-watch/${k}`} className="group overflow-hidden rounded-lg border border-[#333] bg-[#1a1a1a] transition hover:-translate-y-1 hover:border-vox">
+            <Link key={k} to={`/ways-to-watch/${k}`} className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-vox-pink hover:shadow-md">
               <div className="flex h-32 items-center justify-center" style={{ background: `linear-gradient(135deg, ${FORMATS[k].color}55, #0a0a0a)` }}>
                 <span className="text-3xl font-bold uppercase tracking-widest" style={{ color: FORMATS[k].color }}>{FORMATS[k].name}</span>
               </div>
-              <p className="p-4 text-sm text-[#aaa] group-hover:text-white">{FORMATS[k].tagline}</p>
+              <p className="p-4 text-sm text-slate-500 group-hover:text-slate-900">{tr(k).tagline}</p>
             </Link>
           ))}
         </div>
+      </div>
       </div>
     );
   }
@@ -84,26 +89,32 @@ export default function WaysToWatch() {
   const f = FORMATS[slug.toLowerCase()];
   if (!f) {
     return (
+      <div className="bg-white text-slate-900">
       <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h1 className="mb-4 text-2xl font-bold">Experience not found</h1>
-        <Link to="/ways-to-watch" className="text-vox-light hover:underline">View all experiences</Link>
+        <h1 className="mb-4 text-2xl font-bold">{t.ways.notFound}</h1>
+        <Link to="/ways-to-watch" className="text-vox-pink hover:underline">{t.ways.viewAll}</Link>
+      </div>
       </div>
     );
   }
 
+  const ft = tr(slug.toLowerCase());
+
   return (
     <div>
       <div className="px-[6%] py-16 text-center" style={{ background: `linear-gradient(180deg, ${f.color}44, #000)` }}>
-        <p className="text-sm uppercase tracking-widest text-[#aaa]">Ways to Watch</p>
+        <p className="text-sm uppercase tracking-widest text-[#aaa]">{t.ways.kicker}</p>
         <h1 className="mt-1 text-5xl font-bold uppercase tracking-widest" style={{ color: f.color }}>{f.name}</h1>
-        <p className="mt-3 text-lg text-[#ddd]">{f.tagline}</p>
+        <p className="mt-3 text-lg text-[#ddd]">{ft.tagline}</p>
       </div>
-      <div className="mx-auto max-w-3xl space-y-4 px-6 py-10 text-[#ccc]">
-        {f.body.map((p, i) => <p key={i} className="leading-relaxed">{p}</p>)}
+      <div className="bg-white text-slate-900">
+      <div className="mx-auto max-w-3xl space-y-4 px-6 py-10 text-slate-600">
+        {ft.body.map((p, i) => <p key={i} className="leading-relaxed">{p}</p>)}
         <div className="flex flex-wrap gap-3 pt-4">
-          <Link to="/" className="rounded-md bg-vox px-8 py-3 font-semibold transition hover:bg-vox-dark">Find {f.name} Showtimes</Link>
-          <Link to="/ways-to-watch" className="rounded-md border border-[#555] px-8 py-3 hover:border-vox">All Experiences</Link>
+          <Link to="/" className="rounded-md bg-vox px-8 py-3 font-semibold text-white transition hover:bg-vox-dark">{t.ways.findShowtimes}</Link>
+          <Link to="/ways-to-watch" className="rounded-md border border-slate-300 px-8 py-3 text-slate-700 transition hover:border-vox-pink hover:text-vox-pink">{t.ways.allExp}</Link>
         </div>
+      </div>
       </div>
     </div>
   );

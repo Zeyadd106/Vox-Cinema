@@ -1,4 +1,4 @@
-# Vox Cinemas
+# REX Cinemas
 
 Movie ticket booking platform — migrated from Laravel/Blade to a modern TypeScript full-stack app.
 
@@ -7,7 +7,7 @@ Movie ticket booking platform — migrated from Laravel/Blade to a modern TypeSc
 
 ## Features
 
-- **Real VOX Egypt catalog**: 20 now-showing + 18 coming-soon titles mirrored from egy.voxcinemas.com (titles, Egyptian age ratings, synopses, posters stored locally, release dates), programmed across all cinemas and halls
+- **Real Egypt cinema catalog**: 20 now-showing + 18 coming-soon titles mirrored from egy.voxcinemas.com (titles, Egyptian age ratings, synopses, posters stored locally, release dates), programmed across all cinemas and halls
 
 - **Multi-cinema**: browse cinemas (Mall of Egypt, City Centre Almaza, City Centre Alexandria), each with its own halls (Standard / IMAX / GOLD), seat layouts and programming
 - Header like voxcinemas.com: utility bar (search overlay, Login/Sign-Up, Egypt locale, EN/AR toggle with RTL), dropdown nav (Movies, Food & Drinks, Ways to Watch, Offers), cinema strip with Find Times shortcut, mobile flyout menu
@@ -50,7 +50,7 @@ The SQLite database (`server/data/vox.db`) is created and seeded automatically o
 
 | Role  | Email                  | Password   |
 | ----- | ---------------------- | ---------- |
-| Admin | admin@voxcinemas.com   | password   |
+| Admin | admin@rexcinemas.com   | password   |
 | User  | user@example.com       | password   |
 
 ### Other commands

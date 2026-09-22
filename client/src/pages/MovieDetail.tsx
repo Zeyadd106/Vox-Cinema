@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { api, apiError } from '../services/api';
 import { Movie, Showtime, youtubeEmbed } from '../types';
 import { Poster } from '../components/MovieCard';
 import MovieCard from '../components/MovieCard';
-import { useCinemas } from '../context/CinemaContext';
+import { useLang } from '../context/LangContext';
+import { fmtDay, fmtLongDate, fmtTime12 } from '../i18n';
 
 function splitStarring(description: string): { synopsis: string; starring: string | null } {
   const idx = description.indexOf('\n\nStarring:');
@@ -12,13 +13,10 @@ function splitStarring(description: string): { synopsis: string; starring: strin
   return { synopsis: description.slice(0, idx).trim(), starring: description.slice(idx + '\n\nStarring:'.length).trim() };
 }
 
-function fmtDay(d: string): string {
-  return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-}
-
 export default function MovieDetail() {
+  const { t, lang } = useLang();
   const { id } = useParams();
-  const { cinemas, selectedId, setSelectedId } = useCinemas();
+  const location = useLocation();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [showtimes, setShowtimes] = useState<Showtime[]>([]);
   const [catalog, setCatalog] = useState<Movie[]>([]);
@@ -40,10 +38,14 @@ export default function MovieDetail() {
       .catch(() => undefined);
   }, [id]);
 
-  const visible = useMemo(
-    () => (selectedId === 'all' ? showtimes : showtimes.filter((s) => s.cinema_id === selectedId)),
-    [showtimes, selectedId]
-  );
+  useEffect(() => {
+    if (location.hash === '#showtimes' && movie) {
+      const t = setTimeout(() => document.getElementById('showtimes')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+      return () => clearTimeout(t);
+    }
+  }, [location.hash, movie]);
+
+  const visible = useMemo(() => showtimes, [showtimes]);
   const dates = useMemo(() => [...new Set(visible.map((s) => s.date))].sort().slice(0, 7), [visible]);
   const shownDate = dates.includes(activeDate) ? activeDate : (dates[0] ?? '');
 
@@ -70,7 +72,7 @@ export default function MovieDetail() {
   }, [catalog, movie]);
 
   if (error) return <p className="p-16 text-center text-red-400">{error}</p>;
-  if (!movie) return <p className="p-16 text-center text-[#888]">Loading...</p>;
+  if (!movie) return <p className="p-16 text-center text-[#888]">{t.common.loading}</p>;
 
   const { synopsis, starring } = splitStarring(movie.description);
   const embed = youtubeEmbed(movie.trailer_url);
@@ -78,19 +80,21 @@ export default function MovieDetail() {
   const pageUrl = window.location.href;
   const todayStr = new Date().toISOString().slice(0, 10);
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const tabLabel = (d: string) => (d === todayStr ? 'Today' : d === tomorrowStr ? 'Tomorrow' : fmtDay(d));
+  const tabLabel = (d: string) => (d === todayStr ? t.detail.today : d === tomorrowStr ? t.detail.tomorrow : fmtDay(d, lang));
 
   const notify = async () => {
     try {
-      const { data } = await api.post(`/movies/${movie.id}/notify`);
-      setNotifyMsg(data.message);
+      await api.post(`/movies/${movie.id}/notify`);
+      setNotifyMsg(t.detail.notified);
     } catch (e) {
       setNotifyMsg(apiError(e));
     }
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-[6%] py-10">
+    <div>
+      <div className="bg-black text-white">
+      <div className="mx-auto max-w-6xl px-[6%] py-10">
       {/* ── Title + classification + share ── */}
       <h1 className="text-4xl font-bold">{movie.title}</h1>
       <div className="mt-2 flex items-center gap-3">
@@ -123,11 +127,11 @@ export default function MovieDetail() {
             <p className="mt-2 line-clamp-4 leading-relaxed text-[#ccc]">{synopsis}</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <span className="rounded bg-vox px-3 py-1 text-sm font-bold">{movie.rating}</span>
-              <span className="text-sm text-[#aaa]">{movie.duration}{movie.duration !== 'TBA' ? ' runtime' : ''} • {language}</span>
+              <span className="text-sm text-[#aaa]">{movie.duration}{movie.duration !== 'TBA' ? ` ${t.detail.runtimeSuffix}` : ''} • {language}</span>
               {movie.status === 'current' ? (
-                <Link to={`/book/${movie.id}`} className="ms-auto rounded-md bg-vox px-8 py-2.5 font-semibold transition hover:bg-vox-dark">Book Tickets</Link>
+                <Link to={`/book/${movie.id}`} className="ms-auto rounded-md bg-vox px-8 py-2.5 font-semibold transition hover:bg-vox-dark">{t.detail.bookTickets}</Link>
               ) : (
-                <button onClick={notify} className="ms-auto rounded-md bg-vox px-8 py-2.5 font-semibold transition hover:bg-vox-dark">Notify Me</button>
+                <button onClick={notify} className="ms-auto rounded-md bg-vox px-8 py-2.5 font-semibold transition hover:bg-vox-dark">{t.detail.notifyMe}</button>
               )}
             </div>
             {notifyMsg && <p className="mt-3 text-sm text-green-400">{notifyMsg}</p>}
@@ -135,32 +139,33 @@ export default function MovieDetail() {
         )}
       </div>
 
-      {/* ── View showtimes + meta + synopsis ── */}
+      {/* ── View showtimes / notify (hero) ── */}
       {movie.status === 'current' ? (
         <p className="mt-8 text-center">
-          <a href="#showtimes" className="inline-block rounded-full bg-vox px-10 py-3 font-bold uppercase tracking-wider transition hover:bg-vox-dark">View Showtimes</a>
+          <a href="#showtimes" className="inline-block rounded-full bg-vox px-10 py-3 font-bold uppercase tracking-wider transition hover:bg-vox-dark">{t.detail.viewShowtimes}</a>
         </p>
       ) : (
         <div className="mt-8 text-center">
-          <p className="mb-3 text-[#aaa]">Releasing {new Date(movie.release_date + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          {!embed && null}
-          <button onClick={notify} className="inline-block rounded-full bg-vox px-10 py-3 font-bold uppercase tracking-wider transition hover:bg-vox-dark">Notify Me</button>
+          <p className="mb-3 text-[#aaa]">{t.detail.releasing} {fmtLongDate(movie.release_date, lang)}</p>
+          <button onClick={notify} className="inline-block rounded-full bg-vox px-10 py-3 font-bold uppercase tracking-wider transition hover:bg-vox-dark">{t.detail.notifyMe}</button>
           {notifyMsg && <p className="mt-3 text-sm text-green-400">{notifyMsg}</p>}
         </div>
       )}
+      </div>
+      </div>
 
-      <hr className="my-8 border-t border-dashed border-[#444]" />
-
+      <div className="bg-white text-slate-900">
+      <div className="mx-auto max-w-6xl px-[6%] py-10">
       <div className="grid gap-8 md:grid-cols-[280px_1fr]">
-        <aside className="space-y-2 rounded-lg border border-[#333] bg-[#141414] p-5 text-sm">
-          <MetaRow label="Genre" value={movie.genre} />
-          <MetaRow label="Running Time" value={movie.duration === 'TBA' ? 'To be announced' : movie.duration} />
-          <MetaRow label="Release Date" value={new Date(movie.release_date + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })} />
-          {starring && <MetaRow label="Starring" value={starring} />}
-          <MetaRow label="Language" value={language} />
-          <MetaRow label="Subtitle(s)" value={language === 'English' ? 'Arabic' : '—'} />
+        <aside className="h-fit space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm">
+          <MetaRow label={t.detail.genre} value={movie.genre} />
+          <MetaRow label={t.detail.runningTime} value={movie.duration === 'TBA' ? t.detail.tba : movie.duration} />
+          <MetaRow label={t.detail.releaseDate} value={fmtLongDate(movie.release_date, lang)} />
+          {starring && <MetaRow label={t.detail.starring} value={starring} />}
+          <MetaRow label={t.detail.language} value={language} />
+          <MetaRow label={t.detail.subtitles} value={language === 'English' ? 'Arabic' : t.detail.noSubs} />
         </aside>
-        <article className="leading-relaxed text-[#ddd]">
+        <article className="leading-relaxed text-slate-700">
           {synopsis.split('\n\n').map((p, i) => <p key={i} className="mb-4">{p}</p>)}
         </article>
       </div>
@@ -168,20 +173,9 @@ export default function MovieDetail() {
       {/* ── Showtimes ── */}
       {movie.status === 'current' && (
         <section id="showtimes" className="scroll-mt-48">
-          <hr className="my-8 border-t border-dashed border-[#444]" />
-          <h2 className="mb-1 text-2xl font-bold text-vox">{movie.title} - Showtimes</h2>
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <p className="text-sm text-[#888]">Cinema:</p>
-            <select
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="cursor-pointer rounded-md border border-[#444] bg-[#1a1a1a] px-3 py-1.5 text-sm outline-none focus:border-vox"
-            >
-              <option value="all">All Cinemas</option>
-              {cinemas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-          {dates.length === 0 && <p className="text-[#888]">No upcoming showtimes{selectedId === 'all' ? '.' : ' at this cinema.'}</p>}
+          <hr className="my-8 border-t border-dashed border-slate-300" />
+          <h2 className="mb-4 text-2xl font-bold text-vox-blue">{movie.title} - {t.detail.showtimesFor}</h2>
+          {dates.length === 0 && <p className="text-slate-500">{t.detail.noTimes}</p>}
           {dates.length > 0 && (
             <nav aria-label="Choose date">
               <ol className="flex gap-2 overflow-x-auto pb-1">
@@ -189,7 +183,7 @@ export default function MovieDetail() {
                   <li key={d}>
                     <button
                       onClick={() => setActiveDate(d)}
-                      className={`whitespace-nowrap rounded-md border px-5 py-2.5 text-sm font-semibold transition ${d === shownDate ? 'border-vox bg-vox' : 'border-[#444] bg-[#1a1a1a] hover:border-vox'}`}
+                      className={`whitespace-nowrap rounded-md border px-5 py-2.5 text-sm font-semibold transition ${d === shownDate ? 'border-vox-pink bg-vox-pink text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-vox-pink hover:text-vox-pink'}`}
                     >
                       {tabLabel(d)}
                     </button>
@@ -201,19 +195,19 @@ export default function MovieDetail() {
           <div className="mt-6 space-y-8">
             {[...byCinema.entries()].map(([cinema, formats]) => (
               <div key={cinema}>
-                <h3 className="mb-3 text-lg font-bold text-vox-light">{cinema}</h3>
+                <h3 className="mb-3 text-lg font-bold text-vox-pink">{cinema}</h3>
                 <ol className="space-y-3">
                   {[...formats.entries()].map(([format, times]) => (
-                    <li key={format} className="rounded-lg border border-[#2a2a2a] bg-[#141414] px-4 py-3">
-                      <strong className="mb-2 block text-sm uppercase tracking-wider text-[#aaa]">{format}</strong>
+                    <li key={format} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <strong className="mb-2 block text-sm uppercase tracking-wider text-slate-500">{format}</strong>
                       <ol className="flex flex-wrap gap-2">
                         {times.map((s) => (
                           <li key={s.id}>
                             <Link
                               to={`/book/${movie.id}?showtime=${s.id}`}
-                              className="inline-block rounded-md border border-[#444] bg-[#1a1a1a] px-5 py-2 font-semibold transition hover:border-vox hover:bg-vox"
+                              className="inline-block rounded-md border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-800 transition hover:border-vox-pink hover:bg-vox-pink hover:text-white"
                             >
-                              {new Date(`2000-01-01T${s.time}`).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '')}
+                              {fmtTime12(s.time, lang)}
                             </Link>
                           </li>
                         ))}
@@ -230,24 +224,26 @@ export default function MovieDetail() {
       {/* ── Recommendations ── */}
       {recommendations.length > 0 && (
         <section className="mt-12">
-          <hr className="my-8 border-t border-dashed border-[#444]" />
-          <h2 className="mb-6 text-center text-2xl font-bold">Some other movies you might like</h2>
+          <hr className="my-8 border-t border-dashed border-slate-300" />
+          <h2 className="mb-6 text-center text-2xl font-bold text-slate-900">{t.detail.recs}</h2>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {recommendations.map((m) => <MovieCard key={m.id} movie={m} action={m.status === 'current' ? 'book' : 'none'} />)}
           </div>
         </section>
       )}
 
-      <p className="mt-12 flex flex-wrap justify-center gap-3">
-        <Link to="/movies" className="rounded-full border-2 border-vox px-8 py-2.5 font-semibold transition hover:bg-vox">Now Showing</Link>
-        <Link to="/coming-soon" className="rounded-full border-2 border-vox px-8 py-2.5 font-semibold transition hover:bg-vox">Coming Soon</Link>
+      <p className="mt-12 flex flex-wrap justify-center gap-3 pb-4">
+        <Link to="/movies" className="rounded-full border-2 border-vox-pink px-8 py-2.5 font-semibold text-vox-pink transition hover:bg-vox-pink hover:text-white">{t.detail.nowShowing}</Link>
+        <Link to="/coming-soon" className="rounded-full border-2 border-vox-pink px-8 py-2.5 font-semibold text-vox-pink transition hover:bg-vox-pink hover:text-white">{t.detail.comingSoonBtn}</Link>
       </p>
+      </div>
+      </div>
     </div>
   );
 }
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <p><strong className="text-white">{label}:</strong> <span className="text-[#bbb]">{value}</span></p>
+    <p><strong className="text-slate-900">{label}:</strong> <span className="text-slate-600">{value}</span></p>
   );
 }

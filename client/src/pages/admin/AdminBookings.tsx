@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, apiError } from '../../services/api';
 import { Booking } from '../../types';
+import { useLang } from '../../context/LangContext';
 
 export default function AdminBookings() {
+  const { t } = useLang();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState('');
 
@@ -15,12 +17,12 @@ export default function AdminBookings() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">All Bookings</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.admin.allBookings}</h1>
       {error && <p className="text-red-400">{error}</p>}
       <div className="overflow-x-auto rounded-lg border border-[#333]">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-start text-sm">
           <thead className="bg-[#222] text-[#aaa]">
-            <tr><th className="px-4 py-2.5">Ref</th><th className="px-4 py-2.5">User</th><th className="px-4 py-2.5">Movie</th><th className="px-4 py-2.5">Cinema</th><th className="px-4 py-2.5">Date</th><th className="px-4 py-2.5">Total</th><th className="px-4 py-2.5">Payment</th></tr>
+            <tr><th className="px-4 py-2.5">{t.admin.ref}</th><th className="px-4 py-2.5">{t.admin.user}</th><th className="px-4 py-2.5">{t.admin.movie}</th><th className="px-4 py-2.5">{t.admin.cinema}</th><th className="px-4 py-2.5">{t.admin.date}</th><th className="px-4 py-2.5">{t.admin.total}</th><th className="px-4 py-2.5">{t.admin.payment}</th></tr>
           </thead>
           <tbody>
             {bookings.map((b) => (
@@ -40,3 +42,4 @@ export default function AdminBookings() {
     </div>
   );
 }
+

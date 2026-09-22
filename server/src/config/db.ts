@@ -20,6 +20,10 @@ export function migrate() {
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
       is_admin INTEGER NOT NULL DEFAULT 0,
+      phone TEXT,
+      birth_date TEXT,
+      gender TEXT NOT NULL DEFAULT '',
+      preferred_cinema_id INTEGER REFERENCES cinemas(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -125,6 +129,10 @@ export function migrate() {
 
   const tableCols = (t: string) => db.prepare(`PRAGMA table_info(${t})`).all() as { name: string }[];
   const hasCol = (t: string, n: string) => tableCols(t).some((c) => c.name === n);
+  if (!hasCol('users', 'phone')) db.exec('ALTER TABLE users ADD COLUMN phone TEXT');
+  if (!hasCol('users', 'birth_date')) db.exec('ALTER TABLE users ADD COLUMN birth_date TEXT');
+  if (!hasCol('users', 'gender')) db.exec("ALTER TABLE users ADD COLUMN gender TEXT NOT NULL DEFAULT ''");
+  if (!hasCol('users', 'preferred_cinema_id')) db.exec('ALTER TABLE users ADD COLUMN preferred_cinema_id INTEGER REFERENCES cinemas(id) ON DELETE SET NULL');
   if (!hasCol('seats', 'hall_id')) db.exec('ALTER TABLE seats ADD COLUMN hall_id INTEGER REFERENCES halls(id) ON DELETE CASCADE');
   if (!hasCol('showtimes', 'hall_id')) db.exec('ALTER TABLE showtimes ADD COLUMN hall_id INTEGER REFERENCES halls(id) ON DELETE CASCADE');
 
@@ -191,6 +199,22 @@ export function migrate() {
   // Backfill check-in tokens for rows created before the column existed
   try {
     db.exec("UPDATE bookings SET check_in_token = lower(hex(randomblob(12))) WHERE check_in_token IS NULL");
+  } catch {
+    /* ignore */
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      email TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_resets_token ON password_resets(token);
+    CREATE INDEX IF NOT EXISTS idx_resets_expiry ON password_resets(expires_at);
+  `);
+  try {
+    db.exec("DELETE FROM password_resets WHERE expires_at <= datetime('now')");
   } catch {
     /* ignore */
   }

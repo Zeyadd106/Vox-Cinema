@@ -3,6 +3,21 @@ export interface User {
   name: string;
   email: string;
   is_admin: boolean;
+  phone: string | null;
+  birth_date: string | null;
+  gender: string;
+  preferred_cinema_id: number | null;
+}
+
+export interface RegisterData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  birth_date?: string;
+  gender?: string;
+  preferred_cinema_id?: number | null;
 }
 
 export interface Movie {

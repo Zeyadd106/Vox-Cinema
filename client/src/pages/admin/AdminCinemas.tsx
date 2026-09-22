@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api, apiError } from '../../services/api';
 import { Cinema, Hall } from '../../types';
+import { useLang } from '../../context/LangContext';
 
 const FORMATS = ['Standard', 'IMAX', 'MAX', 'GOLD', '4DX', 'KIDS'];
 
 export default function AdminCinemas() {
+  const { t } = useLang();
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [halls, setHalls] = useState<Hall[]>([]);
   const [msg, setMsg] = useState('');
@@ -25,10 +27,10 @@ export default function AdminCinemas() {
     try {
       if (editing) {
         await api.put(`/cinemas/${editing}`, form);
-        setMsg('Cinema updated.');
+        setMsg(t.admin.cinemaUpdated);
       } else {
         await api.post('/cinemas', form);
-        setMsg('Cinema created.');
+        setMsg(t.admin.cinemaCreated);
       }
       setForm({ name: '', city: '', address: '' });
       setEditing(null);
@@ -39,10 +41,10 @@ export default function AdminCinemas() {
   };
 
   const removeCinema = async (id: number) => {
-    if (!confirm('Delete this cinema and its halls? (Blocked if showtimes exist.)')) return;
+    if (!confirm(t.admin.deleteCinemaConfirm)) return;
     try {
       await api.delete(`/cinemas/${id}`);
-      setMsg('Cinema deleted.');
+      setMsg(t.admin.cinemaDeleted);
       load();
     } catch (e) {
       setMsg(apiError(e));
@@ -69,10 +71,10 @@ export default function AdminCinemas() {
   };
 
   const removeHall = async (id: number) => {
-    if (!confirm('Delete this hall and its seats? (Blocked if showtimes exist.)')) return;
+    if (!confirm(t.admin.deleteHallConfirm)) return;
     try {
       await api.delete(`/cinemas/halls/${id}`);
-      setMsg('Hall deleted.');
+      setMsg(t.admin.hallDeleted);
       load();
     } catch (e) {
       setMsg(apiError(e));
@@ -83,19 +85,19 @@ export default function AdminCinemas() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Cinemas & Halls</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.admin.cinemas}</h1>
       {msg && <p className="mb-4 rounded border border-[#444] bg-[#222] px-4 py-2 text-sm">{msg}</p>}
       {error && <p className="text-red-400">{error}</p>}
 
       <form onSubmit={submitCinema} className="mb-8 flex flex-wrap items-end gap-3 rounded-lg border border-[#333] bg-[#1a1a1a] p-5">
-        <div><label className="mb-1 block text-xs text-[#aaa]">Name</label>
+        <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.cinemaName}</label>
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={input} placeholder="Mall of Egypt" /></div>
-        <div><label className="mb-1 block text-xs text-[#aaa]">City</label>
+        <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.city}</label>
           <input required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={input} placeholder="Giza" /></div>
-        <div className="min-w-[220px] flex-1"><label className="mb-1 block text-xs text-[#aaa]">Address</label>
+        <div className="min-w-[220px] flex-1"><label className="mb-1 block text-xs text-[#aaa]">{t.admin.addressF}</label>
           <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={input} /></div>
-        <button className="rounded-md bg-vox px-6 py-2 text-sm font-semibold hover:bg-vox-dark">{editing ? 'Update' : 'Add Cinema'}</button>
-        {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: '', city: '', address: '' }); }} className="text-sm text-[#888] hover:text-white">Cancel</button>}
+        <button className="rounded-md bg-vox px-6 py-2 text-sm font-semibold hover:bg-vox-dark">{editing ? t.admin.updateCinema : t.admin.addCinema}</button>
+        {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: '', city: '', address: '' }); }} className="text-sm text-[#888] hover:text-white">{t.admin.cancelBtn}</button>}
       </form>
 
       <div className="space-y-6">
@@ -104,24 +106,24 @@ export default function AdminCinemas() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold">{c.name} <span className="text-sm font-normal text-[#888]">— {c.city}</span></h2>
-                <p className="text-xs text-[#888]">{c.address} • {c.hall_count} halls • {c.upcoming_count} upcoming showtimes</p>
+                <p className="text-xs text-[#888]">{c.address} • {c.hall_count} {t.admin.halls} • {c.upcoming_count} {t.admin.upcomingShows}</p>
               </div>
               <div className="flex gap-3 text-sm">
-                <button onClick={() => { setEditing(c.id); setForm({ name: c.name, city: c.city, address: c.address }); }} className="text-vox-light hover:underline">Edit</button>
-                <button onClick={() => removeCinema(c.id)} className="text-red-400 hover:underline">Delete</button>
-                <button onClick={() => { setShowHallForm(showHallForm === c.id ? null : c.id); setHallForm((f) => ({ ...f, cinema_id: String(c.id) })); }} className="text-green-400 hover:underline">+ Hall</button>
+                <button onClick={() => { setEditing(c.id); setForm({ name: c.name, city: c.city, address: c.address }); }} className="text-vox-light hover:underline">{t.common.edit}</button>
+                <button onClick={() => removeCinema(c.id)} className="text-red-400 hover:underline">{t.common.delete}</button>
+                <button onClick={() => { setShowHallForm(showHallForm === c.id ? null : c.id); setHallForm((f) => ({ ...f, cinema_id: String(c.id) })); }} className="text-green-400 hover:underline">{t.admin.addHall}</button>
               </div>
             </div>
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs text-[#888]"><tr><th className="py-1.5 pr-4">Hall</th><th className="py-1.5 pr-4">Format</th><th className="py-1.5 pr-4">Seats</th><th className="py-1.5">Actions</th></tr></thead>
+              <table className="w-full text-start text-sm">
+                <thead className="text-xs text-[#888]"><tr><th className="py-1.5 pe-4">{t.admin.hall}</th><th className="py-1.5 pe-4">{t.admin.format}</th><th className="py-1.5 pe-4">{t.admin.seats}</th><th className="py-1.5">{t.common.actions}</th></tr></thead>
                 <tbody>
                   {halls.filter((h) => h.cinema_id === c.id).map((h) => (
                     <tr key={h.id} className="border-t border-[#2a2a2a]">
-                      <td className="py-1.5 pr-4">{h.name}</td>
-                      <td className="py-1.5 pr-4"><span className="rounded bg-[#333] px-2 py-0.5 text-xs">{h.format}</span></td>
-                      <td className="py-1.5 pr-4">{h.seat_count}</td>
-                      <td className="py-1.5"><button onClick={() => removeHall(h.id)} className="text-red-400 hover:underline">Delete</button></td>
+                      <td className="py-1.5 pe-4">{h.name}</td>
+                      <td className="py-1.5 pe-4"><span className="rounded bg-[#333] px-2 py-0.5 text-xs">{h.format}</span></td>
+                      <td className="py-1.5 pe-4">{h.seat_count}</td>
+                      <td className="py-1.5"><button onClick={() => removeHall(h.id)} className="text-red-400 hover:underline">{t.common.delete}</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -129,17 +131,17 @@ export default function AdminCinemas() {
             </div>
             {showHallForm === c.id && (
               <form onSubmit={submitHall} className="mt-3 flex flex-wrap items-end gap-3 rounded-md border border-[#333] bg-black/40 p-4">
-                <div><label className="mb-1 block text-xs text-[#aaa]">Hall name</label>
+                <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.hallName}</label>
                   <input required value={hallForm.name} onChange={(e) => setHallForm({ ...hallForm, name: e.target.value })} className={input} placeholder="Standard Hall 2" /></div>
-                <div><label className="mb-1 block text-xs text-[#aaa]">Format</label>
+                <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.format}</label>
                   <select value={hallForm.format} onChange={(e) => setHallForm({ ...hallForm, format: e.target.value })} className={input}>
                     {FORMATS.map((f) => <option key={f}>{f}</option>)}
                   </select></div>
-                <div><label className="mb-1 block text-xs text-[#aaa]">Rows (A,B,C...)</label>
+                <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.rows}</label>
                   <input required value={hallForm.row_labels} onChange={(e) => setHallForm({ ...hallForm, row_labels: e.target.value })} className={input} /></div>
-                <div><label className="mb-1 block text-xs text-[#aaa]">Seats/row</label>
+                <div><label className="mb-1 block text-xs text-[#aaa]">{t.admin.seatsPerRow}</label>
                   <input type="number" min={1} max={30} required value={hallForm.seats_per_row} onChange={(e) => setHallForm({ ...hallForm, seats_per_row: e.target.value })} className={input} /></div>
-                <button className="rounded-md bg-vox px-5 py-2 text-sm font-semibold hover:bg-vox-dark">Create Hall</button>
+                <button className="rounded-md bg-vox px-5 py-2 text-sm font-semibold hover:bg-vox-dark">{t.admin.createHall}</button>
               </form>
             )}
           </div>
@@ -148,3 +150,5 @@ export default function AdminCinemas() {
     </div>
   );
 }
+
+

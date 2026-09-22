@@ -7,5 +7,5 @@ const PORT = Number(process.env.PORT || 4000);
 // Safety net: sweep expired seat holds every minute (requests also purge lazily)
 setInterval(() => purgeExpiredHolds(), 60_000).unref?.();
 app.listen(PORT, () => {
-  console.log(`Vox Cinemas API listening on http://localhost:${PORT}`);
+  console.log(`REX Cinemas API listening on http://localhost:${PORT}`);
 });

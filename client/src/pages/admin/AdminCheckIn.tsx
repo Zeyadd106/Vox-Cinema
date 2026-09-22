@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api, apiError } from '../../services/api';
+import { useLang } from '../../context/LangContext';
 
 interface CheckInResult {
   message: string;
@@ -15,6 +16,7 @@ interface CheckInResult {
 }
 
 export default function AdminCheckIn() {
+  const { t } = useLang();
   const [ref, setRef] = useState('');
   const [token, setToken] = useState('');
   const [result, setResult] = useState<CheckInResult | null>(null);
@@ -28,9 +30,9 @@ export default function AdminCheckIn() {
     setResult(null);
     let body: Record<string, string> = { booking_reference: ref.trim(), check_in_token: token.trim() };
     // Allow pasting the raw scanned QR JSON
-    const t = ref.trim();
-    if (t.startsWith('{')) {
-      body = { qr_data: t };
+    const raw = ref.trim();
+    if (raw.startsWith('{')) {
+      body = { qr_data: raw };
     }
     try {
       const { data } = await api.post('/admin/check-in', body);
@@ -46,8 +48,8 @@ export default function AdminCheckIn() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold">Ticket Check-in</h1>
-      <p className="mb-6 text-sm text-[#999]">Scan the guest's QR code (paste its content) or enter the reference + code manually.</p>
+      <h1 className="mb-2 text-2xl font-bold">{t.admin.checkinTitle}</h1>
+      <p className="mb-6 text-sm text-[#999]">{t.admin.checkinSub}</p>
       <form onSubmit={submit} className="grid max-w-xl gap-4 rounded-lg border border-[#333] bg-[#1a1a1a] p-8">
         {error && <p className="rounded bg-red-950 px-3 py-2 text-sm text-red-300">{error}</p>}
         {result && (
@@ -61,15 +63,15 @@ export default function AdminCheckIn() {
           </div>
         )}
         <div>
-          <label className="mb-1 block text-sm text-[#aaa]">Booking reference (or paste scanned QR JSON)</label>
-          <input required value={ref} onChange={(e) => setRef(e.target.value)} placeholder="VOXXXXXXXXX or {&quot;ref&quot;:...}" className={input} />
+          <label className="mb-1 block text-sm text-[#aaa]">{t.admin.checkinRef}</label>
+           <input required value={ref} onChange={(e) => setRef(e.target.value)} placeholder="REXXXXXXXXX" className={input} />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-[#aaa]">Check-in code (from QR; skip if pasted above)</label>
-          <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="24-char code" className={input} />
+          <label className="mb-1 block text-sm text-[#aaa]">{t.admin.checkinCode}</label>
+          <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="••••••••" className={input} />
         </div>
         <button disabled={busy} className="rounded-md bg-vox py-3 font-semibold hover:bg-vox-dark disabled:opacity-50">
-          {busy ? 'Verifying...' : 'Check In'}
+          {busy ? t.admin.checkingIn : t.admin.checkinBtn}
         </button>
       </form>
     </div>

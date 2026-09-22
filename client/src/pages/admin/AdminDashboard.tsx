@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, apiError } from '../../services/api';
 import { AdminStats } from '../../types';
+import { useLang } from '../../context/LangContext';
 
 export default function AdminDashboard() {
+  const { t } = useLang();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [error, setError] = useState('');
 
@@ -12,19 +14,19 @@ export default function AdminDashboard() {
   }, []);
 
   if (error) return <p className="text-red-400">{error}</p>;
-  if (!stats) return <p className="text-[#888]">Loading...</p>;
+  if (!stats) return <p className="text-[#888]">{t.common.loading}</p>;
 
   const cards = [
-    { label: 'Total Users', value: stats.total_users },
-    { label: 'Total Bookings', value: stats.total_bookings },
-    { label: 'Total Movies', value: stats.total_movies },
-    { label: 'Coming Soon', value: stats.coming_soon_count },
-    { label: 'Revenue', value: `$${Number(stats.revenue).toFixed(2)}` },
+    { label: t.admin.totalUsers, value: stats.total_users },
+    { label: t.admin.totalBookings, value: stats.total_bookings },
+    { label: t.admin.totalMovies, value: stats.total_movies },
+    { label: t.admin.comingSoonC, value: stats.coming_soon_count },
+    { label: t.admin.revenue, value: `$${Number(stats.revenue).toFixed(2)}` },
   ];
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Dashboard</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t.admin.dashboard}</h1>
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map((c) => (
           <div key={c.label} className="rounded-lg border border-[#333] bg-[#1a1a1a] p-5">
@@ -33,11 +35,11 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
-      <h2 className="mb-3 text-lg font-semibold">Recent Bookings</h2>
+      <h2 className="mb-3 text-lg font-semibold">{t.admin.recentBookings}</h2>
       <div className="overflow-x-auto rounded-lg border border-[#333]">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-start text-sm">
           <thead className="bg-[#222] text-[#aaa]">
-            <tr><th className="px-4 py-2.5">Ref</th><th className="px-4 py-2.5">User</th><th className="px-4 py-2.5">Movie</th><th className="px-4 py-2.5">Total</th><th className="px-4 py-2.5">Status</th></tr>
+            <tr><th className="px-4 py-2.5">{t.admin.ref}</th><th className="px-4 py-2.5">{t.admin.user}</th><th className="px-4 py-2.5">{t.admin.movie}</th><th className="px-4 py-2.5">{t.admin.total}</th><th className="px-4 py-2.5">{t.admin.status}</th></tr>
           </thead>
           <tbody>
             {stats.recent_bookings.map((b) => (
@@ -55,3 +57,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

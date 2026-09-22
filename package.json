@@ -1,8 +1,8 @@
 {
-  "name": "vox-cinema",
+  "name": "rex-cinemas",
   "version": "1.0.0",
   "private": true,
-  "description": "Vox Cinemas — movie ticket booking platform (React + TypeScript + Tailwind frontend, Node + TypeScript + SQLite backend)",
+  "description": "REX Cinemas — movie ticket booking platform (React + TypeScript + Tailwind frontend, Node + TypeScript + SQLite backend)",
   "scripts": {
     "install:all": "npm --prefix server install && npm --prefix client install",
     "dev": "concurrently -c \"#e31837,#38bdf8\" -n \"server,client\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, apiError } from '../../services/api';
+import { useLang } from '../../context/LangContext';
 
 const GENRES = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Adventure', 'Romance', 'Animation', 'Documentary', 'Thriller'];
 const RATINGS = ['G', 'PG', 'PG-13', 'R', 'NC-17', 'PG12', '12+', '16+', '18+', '18TC'];
 
 export default function AdminMovieForm() {
+  const { t } = useLang();
   const { id } = useParams();
   const isEdit = Boolean(id && id !== 'new');
   const navigate = useNavigate();
@@ -48,33 +50,33 @@ export default function AdminMovieForm() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">{isEdit ? 'Edit Movie' : 'Add Movie'}</h1>
+      <h1 className="mb-6 text-2xl font-bold">{isEdit ? t.admin.editMovie : t.admin.newMovie}</h1>
       <form onSubmit={submit} className="grid max-w-3xl gap-4 rounded-lg border border-[#333] bg-[#1a1a1a] p-8">
         {error && <p className="rounded bg-red-950 px-3 py-2 text-sm text-red-300">{error}</p>}
-        <div><label className="mb-1 block text-sm text-[#aaa]">Title</label><input required value={form.title} onChange={set('title')} className={input} /></div>
-        <div><label className="mb-1 block text-sm text-[#aaa]">Description</label><textarea required rows={3} value={form.description} onChange={set('description')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.titleF}</label><input required value={form.title} onChange={set('title')} className={input} /></div>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.descF}</label><textarea required rows={3} value={form.description} onChange={set('description')} className={input} /></div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="mb-1 block text-sm text-[#aaa]">Duration (e.g. 2h 15m)</label><input required value={form.duration} onChange={set('duration')} className={input} /></div>
-          <div><label className="mb-1 block text-sm text-[#aaa]">Trailer URL</label><input value={form.trailer_url} onChange={set('trailer_url')} placeholder="https://..." className={input} /></div>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.durationF}</label><input required value={form.duration} onChange={set('duration')} className={input} /></div>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.trailerF}</label><input value={form.trailer_url} onChange={set('trailer_url')} placeholder="https://..." className={input} /></div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="mb-1 block text-sm text-[#aaa]">Genre</label>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.genreF}</label>
             <select value={form.genre} onChange={set('genre')} className={input}>{GENRES.map((g) => <option key={g}>{g}</option>)}</select></div>
-          <div><label className="mb-1 block text-sm text-[#aaa]">Rating</label>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.ratingF}</label>
             <select value={form.rating} onChange={set('rating')} className={input}>{RATINGS.map((r) => <option key={r}>{r}</option>)}</select></div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="mb-1 block text-sm text-[#aaa]">Status</label>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.statusF}</label>
             <select value={form.status} onChange={set('status')} className={input}>
-              <option value="current">Current</option>
-              <option value="coming_soon">Coming Soon</option>
+              <option value="current">{t.admin.current}</option>
+              <option value="coming_soon">{t.admin.comingSoonS}</option>
             </select></div>
-          <div><label className="mb-1 block text-sm text-[#aaa]">Release Date</label><input type="date" required value={form.release_date} onChange={set('release_date')} className={input} /></div>
+          <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.releaseF}</label><input type="date" required value={form.release_date} onChange={set('release_date')} className={input} /></div>
         </div>
-        <div><label className="mb-1 block text-sm text-[#aaa]">Poster {!isEdit && '(required, max 2MB)'}</label>
+        <div><label className="mb-1 block text-sm text-[#aaa]">{t.admin.posterF} {!isEdit && t.admin.posterReq}</label>
           <input type="file" accept="image/*" onChange={(e) => setPoster(e.target.files?.[0] ?? null)} className="text-sm text-[#aaa]" /></div>
         <button disabled={busy} className="rounded-md bg-vox py-3 font-semibold hover:bg-vox-dark disabled:opacity-50">
-          {busy ? 'Saving...' : isEdit ? 'Update Movie' : 'Create Movie'}
+          {busy ? t.admin.saving : isEdit ? t.admin.updateMovie : t.admin.createMovie}
         </button>
       </form>
     </div>

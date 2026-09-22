@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '../types';
+import { User, RegisterData } from '../types';
 import { api } from '../services/api';
 
 interface AuthCtx {
@@ -7,7 +7,7 @@ interface AuthCtx {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<{ user: User; token: string }>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -59,8 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.user as User;
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    await api.post('/auth/register', { name, email, password });
+  const register = async (data: RegisterData) => {
+    const res = await api.post('/auth/register', data);
+    // Auto-login after signup like the major cinema apps
+    setUser(res.data.user);
+    setToken(res.data.token);
+    localStorage.setItem('vox_token', res.data.token);
+    localStorage.setItem('vox_user', JSON.stringify(res.data.user));
+    return res.data as { user: User; token: string };
   };
 
   const logout = () => {

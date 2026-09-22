@@ -1,4 +1,5 @@
 import { Seat } from '../types';
+import { useLang } from '../context/LangContext';
 
 export default function SeatMap({
   seats,
@@ -10,10 +11,11 @@ export default function SeatMap({
   onToggle: (id: number) => void;
 }) {
   const rows = [...new Set(seats.map((s) => s.row))].sort();
+  const { t } = useLang();
   return (
     <div className="rounded-lg border border-[#333] bg-[#111] p-6">
       <div className="mx-auto mb-6 max-w-md rounded-b-full border-2 border-t-0 border-vox/60 py-2 text-center text-sm uppercase tracking-[4px] text-vox-light">
-        Screen
+        {t.seat.screen}
       </div>
       <div className="space-y-2">
         {rows.map((row) => (
@@ -44,9 +46,9 @@ export default function SeatMap({
         ))}
       </div>
       <div className="mt-6 flex justify-center gap-6 text-xs text-[#aaa]">
-        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-[#2a2a2a]" /> Available</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-amber-400" /> Selected</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-[#333]" /> Booked</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-[#2a2a2a]" /> {t.seat.available}</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-amber-400" /> {t.seat.selected}</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-4 w-4 rounded bg-[#333]" /> {t.seat.booked}</span>
       </div>
     </div>
   );

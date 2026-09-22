@@ -3,6 +3,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, apiError } from '../services/api';
 import { Movie, PriceQuote, Seat, Showtime, TICKET_PRICE } from '../types';
 import SeatMap from '../components/SeatMap';
+import { useLang } from '../context/LangContext';
+import { fmtDay } from '../i18n';
 
 interface Hold {
   token: string;
@@ -26,6 +28,7 @@ function useCountdown(target: number | null): string {
 }
 
 export default function BookMovie() {
+  const { t, lang } = useLang();
   const { movieId } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -77,7 +80,7 @@ export default function BookMovie() {
     if (hold && Date.now() >= hold.expiresAt) {
       setHold(null);
       setSelected([]);
-      setError('Your seat hold expired. Please select seats again.');
+      setError(t.book.holdExpired);
       if (showtimeId) loadSeats(showtimeId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,21 +153,21 @@ export default function BookMovie() {
 
   return (
     <div className="mx-auto max-w-6xl px-[6%] py-12">
-      <h1 className="mb-1 text-3xl font-bold">Book Tickets{movie ? ` — ${movie.title}` : ''}</h1>
+      <h1 className="mb-1 text-3xl font-bold">{t.book.title}{movie ? ` — ${movie.title}` : ''}</h1>
       <p className="mb-8 text-sm text-[#999]">
-        ${TICKET_PRICE} per seat + booking fee & tax
+        ${TICKET_PRICE} {t.book.perSeat}
         {showInfo && ` • ${showInfo.cinema_name} • ${showInfo.hall_name}${showInfo.format !== 'Standard' ? ` (${showInfo.format})` : ''}`}
       </p>
       {error && <p className="mb-4 rounded bg-red-950 px-4 py-3 text-sm text-red-300">{error}</p>}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
-          <h2 className="mb-3 font-semibold text-vox">1. Choose date & time</h2>
+          <h2 className="mb-3 font-semibold text-vox">1. {t.book.step1}</h2>
           <div className="mb-3 flex flex-wrap gap-2">
             {dates.map((d) => (
               <button key={d} onClick={() => setActiveDate(d)}
                 className={`rounded-md border px-4 py-2 text-sm font-semibold ${d === activeDate ? 'border-vox bg-vox' : 'border-[#444] bg-[#1a1a1a] hover:border-vox'}`}>
-                {new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                {fmtDay(d, lang)}
               </button>
             ))}
           </div>
@@ -179,8 +182,8 @@ export default function BookMovie() {
           {showtimeId ? (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-semibold text-vox">2. Select seats</h2>
-                <button onClick={() => loadSeats(showtimeId)} className="text-xs text-[#888] hover:text-white">↻ Refresh availability</button>
+                <h2 className="font-semibold text-vox">2. {t.book.step2}</h2>
+                <button onClick={() => loadSeats(showtimeId)} className="text-xs text-[#888] hover:text-white">{t.book.refresh}</button>
               </div>
               <SeatMap seats={seats} selected={hold ? hold.seatIds : selected} onToggle={toggle} />
               {!hold ? (
@@ -189,36 +192,36 @@ export default function BookMovie() {
                   onClick={createHold}
                   className="mt-4 w-full rounded-md bg-vox py-3 font-semibold transition hover:bg-vox-dark disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {busy ? 'Holding...' : `Hold ${selected.length} seat${selected.length === 1 ? '' : 's'}${selectedNames ? ` (${selectedNames})` : ''}`}
+                  {busy ? t.book.booking : `${t.book.holdSeats} (${selected.length})${selectedNames ? ` (${selectedNames})` : ''}`}
                 </button>
               ) : (
                 <div className="mt-4 rounded-lg border border-amber-600 bg-amber-950 px-4 py-3 text-sm text-amber-200">
-                  Seats <b>{heldSeatNames}</b> are held for you — expires in <b className="tabular-nums">{countdown}</b>.
-                  <button onClick={releaseHold} className="ml-3 underline hover:text-white">Release & reselect</button>
+                  <b>{heldSeatNames}</b> {t.book.heldFor} <b className="tabular-nums">{countdown}</b>.
+                  <button onClick={releaseHold} className="ms-3 underline hover:text-white">{t.book.release}</button>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-[#888]">Select a showtime to see the seat map.</p>
+            <p className="text-[#888]">{t.book.selectPrompt}</p>
           )}
         </div>
         <aside className="h-fit rounded-lg border border-[#333] bg-[#1a1a1a] p-6 lg:sticky lg:top-24">
-          <h2 className="mb-4 font-semibold text-vox">Booking Summary</h2>
-          <p className="text-sm text-[#aaa]">Movie</p>
+          <h2 className="mb-4 font-semibold text-vox">{t.book.summary}</h2>
+          <p className="text-sm text-[#aaa]">{t.book.movieL}</p>
           <p className="mb-3 font-semibold">{movie?.title ?? '—'}</p>
-          <p className="text-sm text-[#aaa]">Seats</p>
+          <p className="text-sm text-[#aaa]">{t.book.seatsL}</p>
           <p className="mb-3 font-semibold">{hold ? heldSeatNames : selectedNames || '—'}</p>
           {hold ? (
             <div className="mb-4 space-y-1.5 border-t border-[#333] pt-4 text-sm">
-              <div className="flex justify-between text-[#ccc]"><span>Subtotal</span><span>${hold.quote.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[#ccc]"><span>Booking fee</span><span>${hold.quote.booking_fee.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[#ccc]"><span>Tax ({hold.quote.tax_rate}%)</span><span>${hold.quote.tax_amount.toFixed(2)}</span></div>
-              <div className="flex justify-between border-t border-[#333] pt-2 text-lg font-bold"><span>Total</span><span>${hold.quote.total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[#ccc]"><span>{t.book.subtotal}</span><span>${hold.quote.subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[#ccc]"><span>{t.book.fee}</span><span>${hold.quote.booking_fee.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[#ccc]"><span>{t.book.tax} ({hold.quote.tax_rate}%)</span><span>${hold.quote.tax_amount.toFixed(2)}</span></div>
+              <div className="flex justify-between border-t border-[#333] pt-2 text-lg font-bold"><span>{t.book.totalDue}</span><span>${hold.quote.total.toFixed(2)}</span></div>
             </div>
           ) : (
             <div className="mb-4 flex justify-between border-t border-[#333] pt-4 text-lg font-bold">
-              <span>Total</span>
-              <span>{selected.length === 0 ? '—' : `from $${(selected.length * TICKET_PRICE).toFixed(2)}`}</span>
+              <span>{t.book.totalDue}</span>
+              <span>{selected.length === 0 ? '—' : `${t.book.from} $${(selected.length * TICKET_PRICE).toFixed(2)}`}</span>
             </div>
           )}
           <button
@@ -226,9 +229,9 @@ export default function BookMovie() {
             onClick={proceed}
             className="w-full rounded-md bg-vox py-3 font-semibold transition hover:bg-vox-dark disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {busy ? 'Booking...' : 'Proceed to Payment'}
+            {busy ? t.book.booking : t.book.proceed}
           </button>
-          {!hold && <p className="mt-2 text-center text-xs text-[#666]">Hold seats first — holds expire after 10 minutes.</p>}
+          {!hold && <p className="mt-2 text-center text-xs text-[#666]">{t.book.holdFirst}</p>}
         </aside>
       </div>
     </div>

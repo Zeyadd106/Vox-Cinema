@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Movie } from '../types';
+import { useLang } from '../context/LangContext';
 
 export function Poster({ movie, className }: { movie: Pick<Movie, 'poster_url' | 'title'>; className?: string }) {
   if (movie.poster_url) {
@@ -14,29 +15,53 @@ export function Poster({ movie, className }: { movie: Pick<Movie, 'poster_url' |
 }
 
 export default function MovieCard({ movie, action, onNotify }: { movie: Movie; action?: 'book' | 'notify' | 'none'; onNotify?: (m: Movie) => void }) {
+  const { t } = useLang();
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-[#333] bg-[#1a1a1a] transition duration-300 hover:-translate-y-2 hover:border-vox hover:shadow-[0_20px_40px_rgba(227,24,55,0.25)]">
-      <Link to={`/movies/${movie.id}`} className="relative block aspect-[2/3] overflow-hidden">
-        <Poster movie={movie} className="absolute inset-0 h-full w-full object-cover" />
-        <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-semibold text-amber-400">{movie.rating}</span>
-      </Link>
-      <div className="flex flex-1 flex-col p-4 text-center">
-        <h3 className="mb-1 text-lg font-semibold">
-          <Link to={`/movies/${movie.id}`} className="transition hover:text-vox-light">{movie.title}</Link>
-        </h3>
-        <p className="mb-1 text-xs text-[#999]">{movie.genre} • {movie.duration}</p>
-        <div className="mt-auto pt-2">
-          {action === 'book' && (
-            <Link to={`/book/${movie.id}`} className="inline-block rounded-md border-2 border-vox bg-vox px-5 py-2 font-semibold transition hover:bg-transparent hover:text-vox-light">
-              Book Now
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:border-vox-pink hover:shadow-[0_20px_40px_rgba(212,15,125,0.18)]">
+      <div className="relative aspect-[2/3] overflow-hidden">
+        <Link to={`/movies/${movie.id}`} className="absolute inset-0" aria-label={movie.title}>
+          <Poster movie={movie} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+        </Link>
+        <span className="absolute start-2 top-2 z-10 rounded bg-black/70 px-2 py-0.5 text-xs font-semibold text-amber-400">{movie.rating}</span>
+        {/* Hover overlay like voxcinemas.com poster wall */}
+        <div className="absolute inset-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black via-black/80 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
+          <h3 className="text-lg font-bold">{movie.title}</h3>
+          <p className="mt-0.5 text-xs text-[#bbb]">{movie.genre} • {movie.duration}</p>
+          {movie.description && (
+            <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-[#ddd]">{movie.description.split('\n\n')[0]}</p>
+          )}
+          <div className="mt-3 flex gap-2">
+            <Link to={`/movies/${movie.id}`} className="flex-1 rounded-full border-2 border-white/80 px-3 py-1.5 text-center text-sm font-semibold transition hover:bg-white hover:text-black">
+              {t.card.view}
             </Link>
-          )}
-          {action === 'notify' && (
-            <button onClick={() => onNotify?.(movie)} className="inline-block rounded-md border-2 border-vox bg-vox px-5 py-2 font-semibold transition hover:bg-transparent hover:text-vox-light">
-              Notify Me
-            </button>
-          )}
+            {action === 'book' && (
+              <Link to={`/book/${movie.id}`} className="flex-1 rounded-full bg-vox-pink px-3 py-1.5 text-center text-sm font-bold uppercase tracking-wide text-white transition hover:bg-vox-pink-dark">
+                {t.card.book}
+              </Link>
+            )}
+            {action === 'notify' && (
+              <button onClick={() => onNotify?.(movie)} className="flex-1 rounded-full bg-vox-pink px-3 py-1.5 text-center text-sm font-bold uppercase tracking-wide text-white transition hover:bg-vox-pink-dark">
+                {t.card.notifyMe}
+              </button>
+            )}
+          </div>
         </div>
+      </div>
+      <div className="flex items-center justify-between gap-2 p-3">
+        <h3 className="truncate text-[15px] font-semibold text-slate-900">
+          <Link to={`/movies/${movie.id}`} className="transition hover:text-vox-pink">{movie.title}</Link>
+        </h3>
+        {action === 'book' ? (
+          <Link to={`/book/${movie.id}`} className="shrink-0 rounded-full bg-vox-pink px-4 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-vox-pink-dark">
+            {t.card.book}
+          </Link>
+        ) : action === 'notify' ? (
+          <button onClick={() => onNotify?.(movie)} className="shrink-0 rounded-full bg-vox-pink px-4 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-vox-pink-dark">
+            {t.card.notify}
+          </button>
+        ) : (
+          <Link to={`/movies/${movie.id}`} className="shrink-0 text-xs font-semibold text-vox-pink hover:text-vox-pink-dark">{t.card.view}</Link>
+        )}
       </div>
     </article>
   );

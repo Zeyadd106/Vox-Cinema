@@ -21,7 +21,7 @@ export function seed() {
   console.log('Seeding database...');
 
   const insertUser = db.prepare('INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)');
-  insertUser.run('Admin User', 'admin@voxcinemas.com', bcrypt.hashSync('password', 10), 1);
+  insertUser.run('Admin User', 'admin@rexcinemas.com', bcrypt.hashSync('password', 10), 1);
   insertUser.run('Regular User', 'user@example.com', bcrypt.hashSync('password', 10), 0);
 
   // Real catalog mirrored from VOX Cinemas Egypt (titles, ratings, synopses,
@@ -226,8 +226,8 @@ export function seed() {
   }
 
   const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
-  insertSetting.run('site_name', 'Vox Cinemas');
-  insertSetting.run('contact_email', 'info@voxcinemas.com');
+  insertSetting.run('site_name', 'REX Cinemas');
+  insertSetting.run('contact_email', 'info@rexcinemas.com');
   insertSetting.run('phone_number', '+123 456 7890');
   insertSetting.run('address', 'Dubai, UAE');
   insertSetting.run('booking_fee', '0');

@@ -1,11 +1,79 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, apiError } from '../services/api';
 import { Movie } from '../types';
-import MovieCard from '../components/MovieCard';
+import MovieCard, { Poster } from '../components/MovieCard';
 import FindTimes from '../components/FindTimes';
+import { FORMATS } from './WaysToWatch';
+import { useLang } from '../context/LangContext';
+
+const SLIDES = [
+  { src: '/banners/banner-red-flag.jpg', alt: 'Red Flag', movieId: 1 },
+  { src: '/banners/banner-resident-evil.jpg', alt: 'Resident Evil', movieId: 2 },
+  { src: '/banners/banner-mahmoud.jpg', alt: 'Mahmoud El Tany', movieId: 3 },
+  { src: '/banners/banner-spider-man.jpg', alt: 'Spider-Man: Brand New Day', movieId: 4 },
+  { src: '/banners/banner-odyssey.jpg', alt: 'The Odyssey', movieId: 5 },
+];
+
+function HeroCarousel() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (paused) return;
+    timer.current = window.setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
+    return () => { if (timer.current) window.clearInterval(timer.current); };
+  }, [paused]);
+
+  return (
+    <section
+      className="relative overflow-hidden bg-black"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      aria-label="Featured movies"
+    >
+      <div className="relative mx-auto aspect-[2/1] max-w-[1100px]">
+        {SLIDES.map((s, i) => (
+          <Link
+            key={s.src}
+            to={`/movies/${s.movieId}#showtimes`}
+            aria-label={`Read more about ${s.alt}`}
+            aria-hidden={i !== index}
+            className={`absolute inset-0 transition-opacity duration-700 ${i === index ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          >
+            <img src={s.src} alt={s.alt} className="h-full w-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
+          </Link>
+        ))}
+        <button
+          onClick={() => setIndex((index - 1 + SLIDES.length) % SLIDES.length)}
+          aria-label="Previous"
+          className="absolute start-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-xl text-white transition hover:bg-vox"
+        >‹</button>
+        <button
+          onClick={() => setIndex((index + 1) % SLIDES.length)}
+          aria-label="Next"
+          className="absolute end-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-xl text-white transition hover:bg-vox"
+        >›</button>
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+          {SLIDES.map((s, i) => (
+            <button
+              key={s.src}
+              onClick={() => setIndex(i)}
+              aria-label={`Go to ${s.alt}`}
+              className={`h-2 rounded-full transition-all ${i === index ? 'w-8 bg-vox' : 'w-2 bg-white/50 hover:bg-white'}`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
+  const { t } = useLang();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [comingSoon, setComingSoon] = useState<Movie[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
 
@@ -13,37 +81,79 @@ export default function Home() {
     api.get('/movies', { params: { status: 'current' } })
       .then(({ data }) => setMovies(data.movies))
       .catch((e) => setError(apiError(e)));
+    api.get('/movies', { params: { status: 'coming_soon' } })
+      .then(({ data }) => setComingSoon((data.movies as Movie[]).slice(0, 4)))
+      .catch(() => undefined);
   }, []);
 
   const filtered = movies.filter((m) => m.title.toLowerCase().includes(query.toLowerCase()));
+  const formatKeys = ['imax', 'max', 'gold', '4dx', 'kids'];
 
   return (
     <div>
-      <section className="flex min-h-[85vh] items-center justify-center bg-gradient-to-b from-[#1a0508] via-black to-black px-6 text-center">
-        <div>
-          <p className="mb-4 text-xl font-semibold uppercase tracking-[4px] text-vox-light">Experience the Magic of Cinema</p>
-          <h1 className="text-5xl font-bold uppercase leading-tight tracking-wide md:text-6xl">Your Ultimate<br />Movie Destination</h1>
-        </div>
-      </section>
-      <section id="find-times" className="scroll-mt-48 px-[6%] pt-10">
+      <section id="find-times" className="scroll-mt-48 px-[6%] py-8">
         <FindTimes />
       </section>
-      <section className="px-[6%] py-12">
-        <h2 className="mb-8 text-center text-3xl font-bold uppercase tracking-widest text-vox">Now Showing</h2>
+
+      <HeroCarousel />
+
+      <section className="bg-white px-[6%] py-12 text-slate-900">
+        <div className="mx-auto mb-8 flex max-w-7xl items-end justify-between">
+          <h2 className="text-3xl font-bold tracking-wide text-vox-blue">{t.whatsOn}</h2>
+          <Link to="/movies" className="rounded-full border-2 border-vox-pink px-6 py-1.5 text-sm font-semibold text-vox-pink transition hover:bg-vox-pink hover:text-white">{t.homePage.viewAll}</Link>
+        </div>
         <div className="mx-auto mb-10 max-w-md">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search for movies..."
-            className="w-full rounded-lg border border-[#333] bg-[#1a1a1a] px-4 py-3 text-white placeholder-[#888] outline-none focus:border-vox-light"
+            placeholder={t.homePage.searchPh}
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-[#888] outline-none focus:border-vox-pink"
           />
         </div>
-        {error && <p className="mb-6 text-center text-red-400">{error}</p>}
-        {filtered.length === 0 && !error && <p className="text-center text-[#888]">No movies found.</p>}
+        {error && <p className="mb-6 text-center text-red-600">{error}</p>}
+        {filtered.length === 0 && !error && <p className="text-center text-slate-500">{t.homePage.noMovies}</p>}
         <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((m) => <MovieCard key={m.id} movie={m} action="book" />)}
         </div>
       </section>
+
+      <section className="bg-[#0d0d0d] px-[6%] py-12">
+        <h2 className="mb-8 text-center text-3xl font-bold tracking-wide text-vox-blue">{t.homePage.experiences}</h2>
+        <div className="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          {formatKeys.map((k) => (
+            <Link
+              key={k}
+              to={`/ways-to-watch/${k}`}
+              className="group flex h-44 flex-col justify-end overflow-hidden rounded-lg border border-[#333] p-4 transition hover:-translate-y-1 hover:border-vox"
+              style={{ background: `linear-gradient(160deg, ${FORMATS[k].color}66, #0a0a0a 70%)` }}
+            >
+              <span className="text-2xl font-bold uppercase tracking-widest" style={{ color: FORMATS[k].color }}>{FORMATS[k].name}</span>
+              <span className="mt-1 line-clamp-2 text-xs text-[#bbb] group-hover:text-white">{t.ways.formats[k]?.tagline ?? FORMATS[k].tagline}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {comingSoon.length > 0 && (
+        <section className="bg-white px-[6%] py-12 text-slate-900">
+          <div className="mx-auto mb-8 flex max-w-7xl items-end justify-between">
+            <h2 className="text-3xl font-bold tracking-wide text-vox-blue">{t.comingSoon}</h2>
+            <Link to="/coming-soon" className="rounded-full border-2 border-vox-pink px-6 py-1.5 text-sm font-semibold text-vox-pink transition hover:bg-vox-pink hover:text-white">{t.homePage.viewAll}</Link>
+          </div>
+          <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {comingSoon.map((m) => (
+              <Link key={m.id} to={`/movies/${m.id}`} className="group relative overflow-hidden rounded-lg border border-[#333] transition hover:-translate-y-1 hover:border-vox">
+                <Poster movie={m} className="aspect-[2/3] w-full object-cover" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-4 pt-10">
+                  <p className="font-semibold group-hover:text-vox-light">{m.title}</p>
+                  <p className="text-xs text-[#aaa]">{new Date(m.release_date + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
+

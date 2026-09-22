@@ -27,7 +27,7 @@ app.use(cors({ origin: process.env.CLIENT_URL?.split(',') ?? true, credentials: 
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'Vox Cinemas API' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'REX Cinemas API' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/showtimes', showtimeRoutes);

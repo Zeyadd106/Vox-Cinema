@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { CinemaProvider } from './context/CinemaContext';
 import { LangProvider } from './context/LangContext';
 import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -10,6 +9,8 @@ import MovieDetail from './pages/MovieDetail';
 import ComingSoon from './pages/ComingSoon';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import BookMovie from './pages/BookMovie';
 import Bookings from './pages/Bookings';
@@ -34,7 +35,6 @@ import AdminSettings from './pages/admin/AdminSettings';
 export default function App() {
   return (
     <AuthProvider>
-      <CinemaProvider>
       <LangProvider>
       <BrowserRouter>
         <Layout>
@@ -49,6 +49,8 @@ export default function App() {
             <Route path="/offers" element={<Offers />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset/:token" element={<ResetPassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/book/:movieId" element={<ProtectedRoute><BookMovie /></ProtectedRoute>} />
             <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
@@ -73,7 +75,6 @@ export default function App() {
         </Layout>
       </BrowserRouter>
       </LangProvider>
-      </CinemaProvider>
     </AuthProvider>
   );
 }
